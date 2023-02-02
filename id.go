@@ -129,7 +129,7 @@ func readMachineID() []byte {
 	return id
 }
 
-func ReadMachineID() (id []byte, err error) {
+func ReadMachineID(salt []byte) (id []byte, err error) {
 	id = make([]byte, md5.Size)
 	hid, err := readPlatformMachineID()
 	if err != nil || len(hid) == 0 {
@@ -138,6 +138,7 @@ func ReadMachineID() (id []byte, err error) {
 	if err == nil && len(hid) != 0 {
 		hw := md5.New()
 		hw.Write([]byte(hid))
+		hw.Write(salt)
 		copy(id, hw.Sum(nil))
 	} else {
 		// Fallback to rand number if machine id can't be gathered

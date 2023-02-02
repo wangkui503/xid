@@ -129,6 +129,25 @@ func readMachineID() []byte {
 	return id
 }
 
+func ReadMachineID() (id []byte, err error) {
+	id = make([]byte, md5.Size)
+	hid, err := readPlatformMachineID()
+	if err != nil || len(hid) == 0 {
+		hid, err = os.Hostname()
+	}
+	if err == nil && len(hid) != 0 {
+		hw := md5.New()
+		hw.Write([]byte(hid))
+		copy(id, hw.Sum(nil))
+	} else {
+		// Fallback to rand number if machine id can't be gathered
+		if _, randErr := rand.Reader.Read(id); randErr != nil {
+			err = fmt.Errorf("xid: cannot get hostname nor generate a random number: %v; %v", err, randErr)
+		}
+	}
+	return
+}
+
 // randInt generates a random uint32
 func randInt() uint32 {
 	b := make([]byte, 3)
